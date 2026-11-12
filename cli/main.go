@@ -48,18 +48,29 @@ func runCollect(args []string) error {
 	out := fs.String("out", "data/dataset", "output dataset directory")
 	ratio := fs.Float64("kotlin-ratio", 0.8, "share of Kotlin samples")
 	replay := fs.Float64("replay", 0.2, "share of old (replay) data per batch")
+	model := fs.String("model", defaultModel, "model name under models/")
+	modelsDir := fs.String("models-dir", "models", "LFS-tracked models directory")
 	_ = fs.Parse(args)
-	fmt.Printf("collect: not implemented yet (out=%s kotlin-ratio=%.2f replay=%.2f)\n", *out, *ratio, *replay)
+	path, err := modelStatus(*modelsDir, *model)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("collect: not implemented yet (model=%s out=%s kotlin-ratio=%.2f replay=%.2f)\n", path, *out, *ratio, *replay)
 	return nil
 }
 
 func runTrain(args []string) error {
 	fs := flag.NewFlagSet("train", flag.ExitOnError)
 	data := fs.String("data", "data/dataset", "collected dataset directory")
-	base := fs.String("base", "Qwen/Qwen2.5-Coder-7B", "base model")
+	model := fs.String("model", defaultModel, "base model name under models/")
+	modelsDir := fs.String("models-dir", "models", "LFS-tracked models directory")
 	ewc := fs.Bool("ewc", false, "enable Elastic Weight Consolidation")
 	_ = fs.Parse(args)
-	fmt.Printf("train: not implemented yet (data=%s base=%s ewc=%t)\n", *data, *base, *ewc)
+	path, err := modelStatus(*modelsDir, *model)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("train: not implemented yet (data=%s model=%s ewc=%t)\n", *data, path, *ewc)
 	return nil
 }
 

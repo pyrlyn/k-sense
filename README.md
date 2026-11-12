@@ -23,6 +23,21 @@ K-sense — отдельный артефакт, который не завис�
 
 По техническому отчёту Qwen 2.5 Coder (Alibaba, 2024) Qwen 2.5 Coder 7B обходит DeepSeek Coder V2 Lite почти на всех кодовых бенчмарках: HumanEval, MBPP, BigCodeBench, LiveCodeBench, Aider, CRUXEval.
 
+## Хранение моделей (Git LFS)
+
+Веса базовых моделей лежат в каталоге `models/` и хранятся через Git LFS, а не обычными git-объектами. Какие файлы идут через LFS (`*.safetensors`, `*.bin`, `*.gguf`, `*.pt` внутри `models/`), задано в `.gitattributes`.
+
+- `models/qwen2.5-coder-7b/` — Qwen 2.5 Coder 7B, основная модель.
+- `models/deepseek-coder-v2-lite/` — DeepSeek Coder V2 Lite, лёгкая альтернатива.
+
+Как это работает:
+
+- при `git clone` с установленным `git lfs` веса скачиваются вместе с репозиторием;
+- клон без LFS можно докачать командой `git lfs pull`;
+- команды `collect` и `train` читают модель из локального пути `models/<имя>` (флаг `--model`) и сообщают, если вместо весов лежат LFS-указатели.
+
+Сами веса в репозиторий пока не загружены.
+
 ## Пайплайн обучения
 
 - **Фреймворки:** Axolotl и Unsloth.
@@ -69,9 +84,9 @@ CLI написан на Go:
 Объём CLI намеренно минимальный: три команды, пока это заглушки.
 
 ```
-k-sense collect   # найти устаревшие и свежие данные, собрать датасет (с replay)
-k-sense train     # офлайн-дообучение LoRA-адаптера на собранном датасете
-k-sense eval      # оценить адаптер; с флагом --deploy — выложить его
+k-sense collect --model qwen2.5-coder-7b   # найти устаревшие и свежие данные, собрать датасет (с replay)
+k-sense train --model qwen2.5-coder-7b     # офлайн-дообучение LoRA-адаптера на собранном датасете
+k-sense eval                              # оценить адаптер; с флагом --deploy — выложить его
 ```
 
 Сборка:

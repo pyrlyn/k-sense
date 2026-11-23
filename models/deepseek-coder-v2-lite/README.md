@@ -1,5 +1,5 @@
 # deepseek-coder-v2-lite
 
-Источник: https://huggingface.co/deepseek-ai/DeepSeek-Coder-V2-Lite-Base
+Source: https://huggingface.co/deepseek-ai/DeepSeek-Coder-V2-Lite-Base
 
-Файлы весов (`*.safetensors` и т. п.) хранятся здесь через Git LFS. Пока не загружены.
+Weight files (`*.safetensors` and similar) are meant to be stored here with Git LFS. They have not been uploaded yet.

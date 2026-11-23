@@ -2,7 +2,7 @@
 
 > **Status: idea / planned.** Nothing beyond this plan and a CLI skeleton exists yet.
 
-This document explains each component of K-sense: what it does and why it is there. The Russian [README](../README.md) is the primary project page; this is the English reference.
+This document explains each component of K-sense: what it does and why it is there. The [README](../README.md) is the project page; this is the architecture reference.
 
 ## 1. Project goal
 
@@ -65,13 +65,25 @@ Target mix: roughly **80% Kotlin, 20% other languages** such as JavaScript and R
 
 ## 8. Go CLI
 
-**What:** A minimal CLI in `cli/`, currently with stub commands:
+**What:** A minimal CLI in `cli/`, currently with stub commands. Flags below are taken from `cli/main.go`. After a successful parse, each command prints a "not implemented yet" line; `collect` and `train` also resolve the model directory and report missing weights or LFS pointers.
 
 ```
 k-sense collect --model qwen2.5-coder-7b   # detect stale/fresh data, build dataset with replay
 k-sense train   --model qwen2.5-coder-7b   # offline LoRA fine-tuning (optional --ewc)
 k-sense eval    [--deploy]                 # evaluate the adapter; --deploy publishes it
 ```
+
+| Command | Flag | Default | Meaning |
+| --- | --- | --- | --- |
+| `collect` | `--out` | `data/dataset` | output dataset directory |
+| `collect` | `--kotlin-ratio` | `0.8` | share of Kotlin samples |
+| `collect` | `--replay` | `0.2` | share of old (replay) data per batch |
+| `collect`, `train` | `--model` | `qwen2.5-coder-7b` | model name under `models/` (`deepseek-coder-v2-lite` is the other known name) |
+| `collect`, `train` | `--models-dir` | `models` | LFS-tracked models directory |
+| `train` | `--data` | `data/dataset` | collected dataset directory |
+| `train` | `--ewc` | off | enable Elastic Weight Consolidation |
+| `eval` | `--adapter` | `out/adapter` | LoRA adapter directory |
+| `eval` | `--deploy` | off | publish the adapter after evaluation |
 
 Build it with `cd cli && go build -o k-sense .`
 

@@ -1,100 +1,31 @@
 # K-sense
 
-> **Статус: идея / в планах.** Работа ещё не начата. Есть только этот план и заготовка CLI.
+> **Status: idea / planned.** Work has not started. This repository holds the plan and a CLI skeleton only.
 
-K-sense — проект компактной языковой модели для кода, специализированной на Kotlin.
+K-sense is a compact coding language model specialized for Kotlin. It is meant to be fine-tuned offline. The model does not rewrite its own weights at runtime: all weight changes happen in a separate training cycle.
 
-## Цель
+The intended training result is a base model plus a LoRA adapter in a standard format (for example safetensors), served through a standard OpenAI-compatible endpoint (for example vLLM, llama.cpp, or Ollama), so any agent or framework can call it.
 
-Отдельная модель, дообученная офлайн. Модель не переписывает себя во время работы: все изменения весов делаются заранее, в отдельном цикле обучения.
+Base-model directories exist under `models/`, but the weight files have not been uploaded yet.
 
-## Модель не привязана к агенту
+## Quick start
 
-K-sense — отдельный артефакт, который не зависит от конкретного агента:
-
-- результат обучения — базовые веса и LoRA-адаптер в стандартном формате, например safetensors;
-- модель отдаётся через стандартный эндпоинт (OpenAI-совместимый API, например через vLLM, llama.cpp или Ollama);
-- поэтому её может вызывать любой агент или фреймворк, не только один.
-
-## Базовая модель
-
-- **Основной вариант:** Qwen 2.5 Coder 7B.
-- **Более лёгкая альтернатива:** DeepSeek Coder V2 Lite.
-
-По техническому отчёту Qwen 2.5 Coder (Alibaba, 2024) Qwen 2.5 Coder 7B обходит DeepSeek Coder V2 Lite почти на всех кодовых бенчмарках: HumanEval, MBPP, BigCodeBench, LiveCodeBench, Aider, CRUXEval.
-
-## Хранение моделей (Git LFS)
-
-Веса базовых моделей лежат в каталоге `models/` и хранятся через Git LFS, а не обычными git-объектами. Какие файлы идут через LFS (`*.safetensors`, `*.bin`, `*.gguf`, `*.pt` внутри `models/`), задано в `.gitattributes`.
-
-- `models/qwen2.5-coder-7b/` — Qwen 2.5 Coder 7B, основная модель.
-- `models/deepseek-coder-v2-lite/` — DeepSeek Coder V2 Lite, лёгкая альтернатива.
-
-Как это работает:
-
-- при `git clone` с установленным `git lfs` веса скачиваются вместе с репозиторием;
-- клон без LFS можно докачать командой `git lfs pull`;
-- команды `collect` и `train` читают модель из локального пути `models/<имя>` (флаг `--model`) и сообщают, если вместо весов лежат LFS-указатели.
-
-Сами веса в репозиторий пока не загружены.
-
-## Пайплайн обучения
-
-- **Фреймворки:** Axolotl и Unsloth.
-- **LoRA-адаптеры.** Базовые веса не меняются. Откат — просто отключить или заменить адаптер.
-
-### Replay: как модель обновляет устаревшие знания
-
-Replay — основной механизм, через который модель перезаписывает устаревшие знания и при этом не теряет остальные.
-
-- Каждый батч обучения смешивает свежие данные с порциями старых данных.
-- Свежие примеры перезаписывают устаревшее поведение, а старые не дают модели забыть то, что ещё актуально. Так модель не страдает от катастрофического забывания.
-- Дополнительно, по желанию, можно включить **Elastic Weight Consolidation (EWC)**. Это регуляризатор, который штрафует модель за сильное изменение весов, важных для старых задач.
-
-## Данные для обучения
-
-Берём не репозитории целиком, а историю изменений:
-
-- диффы;
-- сообщения коммитов;
-- описания pull request'ов;
-- тесты, которые падали и потом были исправлены;
-- комментарии ревью.
-
-**Соотношение языков:** примерно 80/20 в пользу Kotlin. Остальные языки, например JavaScript и Rust, остаются, чтобы модель не теряла общих навыков.
-
-## Процессы разделены
-
-Поиск устаревших данных и обучение — это отдельные команды. Они никогда не выполняются одним шагом.
-
-1. **Сбор данных:** определить, какие данные устарели, а какие свежие, и собрать датасет с replay-порциями.
-2. **Обучение:** офлайн-дообучение LoRA-адаптера на уже собранном датасете.
-3. **Оценка и деплой:** проверить адаптер на бенчмарках и, если результат устраивает, выложить его.
-
-Каждый шаг можно запускать, повторять и откатывать независимо.
-
-## CLI (Go)
-
-CLI написан на Go:
-
-- собирается в один статический бинарник;
-- не нужен рантайм;
-- быстро компилируется.
-
-Объём CLI намеренно минимальный: три команды, пока это заглушки.
-
-```
-k-sense collect --model qwen2.5-coder-7b   # найти устаревшие и свежие данные, собрать датасет (с replay)
-k-sense train --model qwen2.5-coder-7b     # офлайн-дообучение LoRA-адаптера на собранном датасете
-k-sense eval                              # оценить адаптер; с флагом --deploy — выложить его
-```
-
-Сборка:
+The CLI is a Go stub with three commands. After a successful flag parse they print a "not implemented yet" status. `collect` and `train` also check that the named model directory exists.
 
 ```
 cd cli && go build -o k-sense .
+./k-sense collect --model qwen2.5-coder-7b
+./k-sense train --model qwen2.5-coder-7b
+./k-sense eval
 ```
 
-## Контекст
+Known model names are `qwen2.5-coder-7b` (default) and `deepseek-coder-v2-lite`. Every flag is listed in [Architecture: Go CLI](docs/README.md#8-go-cli).
 
-Сейчас Kotlin Benchmark от JetBrains ([kotlinlang.org/benchmark](https://kotlinlang.org/benchmark/)) возглавляют готовые модели, Claude Opus 4.7 и GPT 5.5, в связке с агентами. K-sense не пытается их обогнать. Цель — компактная специализированная модель, которую можно запускать локально.
+## Documentation
+
+- [Architecture](docs/README.md): goals, training stack, data plan, CLI flags and model storage.
+- [models/](models/README.md): Git LFS layout for base-model weights.
+
+## License
+
+Not declared in this repository yet.

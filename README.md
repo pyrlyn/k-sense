@@ -1,4 +1,4 @@
-# K-sense
+<h1><picture><source media="(prefers-color-scheme: dark)" srcset="brand/logo-dark.svg"><img src="brand/logo.svg" width="32" height="32" alt="" align="absmiddle"></picture> K-sense</h1>
 
 > **Status: idea / planned.** Work has not started. This repository holds the plan and a CLI skeleton only.
 
